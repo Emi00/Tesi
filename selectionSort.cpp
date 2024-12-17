@@ -3,7 +3,7 @@
 #include <iostream>
 #include <climits>
 #include <immintrin.h>
-#include <algorithm> 
+#include <algorithm>
 #include <limits>
 using namespace std;
 #pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl,avx512vbmi,avx512ifma,avx512pf,avx512er,avx5124fmaps,avx5124vnniw,avx512bitalg,avx512vp2intersect")
@@ -441,7 +441,7 @@ int main(int argn, char ** argv) {
         tmp[i] = v[i];
     }
     if(order == 3) {
-        generatePseudoSortedArray(v,n,10);
+        generatePseudoSortedArray(v,n,n/10);
     }
     v[n] = std::numeric_limits<double>::lowest();
     if(print >= 2) {

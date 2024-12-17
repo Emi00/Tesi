@@ -19,7 +19,7 @@ do
         for order in ${orders[@]}
         do
 
-            for version in 7 6 5  #0 1 2 3 4 5
+            for version in 0 5  #0 1 2 3 4 5 6 7
             do
                 echo selectionSort $flag rounds $rounds dim $dim algo ${versions[$version]}
                 file=tmp_selectionSort_${dim}_${flag}_${versions[$version]}_$order
@@ -27,31 +27,54 @@ do
                 for i in $(seq 1 $rounds)
                 do
                     ./selectionSort $dim $version 0 $order >> data/$file
-                    sleep 0.01
+                    sleep 0.2
                 done
                 ./statistics.py data/$file
             done
         done
     done
+
     # BubbleSort
-    ##versions=("v0" "v1" "v2")
-    ##g++ bubbleSort.cpp -o bubbleSort -$flag -march=znver5
-    ##for dim in ${dim[@]}
-    ##do
-    ##    for order in ${orders[@]}
-    ##    do
-    ##        for version in 0 1 2
-    ##        do
-    ##            echo bubbleSort $flag rounds $round dim $dim algo ${versions[$version]}
-    ##            file=tmp_bubbleSort_${dim}_${flag}_${versions[$version]}_$order
-    ##            rm data/$file
-    ##            for i in $(seq 1 $rounds)
-    ##            do
-    ##                ./bubbleSort $dim $version 0 $order >> data/$file
-    ##                sleep 0.01
-    ##            done
-    ##            ./statistics.py data/$file
-    ##        done
-    ##    done
-    ##done
+    versions=("v0" "v1" "v2")
+    g++ bubbleSort.cpp -o bubbleSort -$flag -march=znver5
+    for dim in ${dim[@]}
+    do
+        for order in ${orders[@]}
+        do
+            for version in 0 3 #0 1 2 3
+            do
+                echo bubbleSort $flag rounds $rounds dim $dim algo ${versions[$version]}
+                file=tmp_bubbleSort_${dim}_${flag}_${versions[$version]}_$order
+                rm data/$file
+                for i in $(seq 1 $rounds)
+                do
+                    ./bubbleSort $dim $version 0 $order >> data/$file
+                    sleep 0.2
+                done
+                ./statistics.py data/$file
+            done
+        done
+    done
+
+    # InsertionSort
+    versions=("v0" "v1" "v2")
+    g++ insertionSort.cpp -o insertionSort -$flag -march=znver5
+    for dim in ${dim[@]}
+    do
+        for order in ${orders[@]}
+        do
+            for version in 0 2
+            do
+                echo insertionSort $flag rounds $rounds dim $dim algo ${versions[$version]}
+                file=tmp_insertionSort_${dim}_${flag}_${versions[$version]}_$order
+                rm data/$file
+                for i in $(seq 1 $rounds)
+                do
+                    ./insertionSort $dim $version 0 $order >> data/$file
+                    sleep 0.2
+                done
+                ./statistics.py data/$file
+            done
+        done
+    done
 done
