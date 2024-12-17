@@ -1,0 +1,35 @@
+
+
+Used intrinsics:
+
+_mm512_loadu_pd(&v[i]) ->           load unaligned data of type double
+_mm512_reduce_min_pd(reg) ->        return value of minimum dobule element in the vector register
+_mm512_loadu_epi64(&v[i]) ->        load unaligned data of type long
+_mm512_set1_pd(x) ->                set all values of vetor to x
+_mm512_cmpeq_pd_mask(reg1,reg2) ->  get a mask with the result of the item-to-item comparasons
+_mm512_maskz_abs_epi64(mask,reg) -> if mask[i]==1 abs(reg[i]) else 0
+_mm512_reduce_max_epi64(reg) ->     return value of maximum long element in the vector register
+_tzcnt_u32(mask) ->                 return the index of first 1 in mask
+
+parts:
+
+- start (register length)
+mm512:  512 bits register
+
+- middle (operations)
+
+load:   load data into register (must be aligned)
+loadu:  load data into register (doesn't need to be aligned)
+store:  load data from register to memory (must be aligned)
+storeu: load data from register to memory (doesn't need to be aligned)
+reduce: get only 1 value from a vector register
+min:    calculate minimum
+set1:   set all values of a vetor to the same
+cmpeq:  compare(<=)
+mask:   use a mask(either as input or output)
+abs:    calculate modulo(absolute value)
+max:    calculate minimum
+
+- end (data type)
+pd:     data type double
+epi64:  data type long

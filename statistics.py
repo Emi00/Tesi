@@ -130,10 +130,10 @@ def main() :
                     data = f.read().decode()
                     try :
                         v = [int(x) for x in data.split("\n") if len(x) > 0]
-                        v = crop_extremities_percent(v,6)
                     except :
                         print(f"eccezione nel trasformare i dati")
                         pass
+                    v = crop_extremities_percent(v,6)
                     if len(v) > 0 :
                         try :
                             df = pd.concat([pd.DataFrame({file:v}),df], ignore_index=True)

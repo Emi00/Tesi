@@ -16,6 +16,21 @@ void printv(long * v, int n);
 void debug(__m512d a);
 void debug(__m512i a);
 
+bool isSortedAVX512_v1(double * v, int dim) {
+    bool ans = 0;
+    for(int i = 0 ; i < dim - 7 && !ans; i+=8) {
+        __m512d arr1 = _mm512_loadu_pd(&v[i]);
+        __m512d arr2 = _mm512_loadu_pd(&v[i + 1]);
+        __mmask8 mask =_mm512_cmp_pd_mask(arr1,arr2,_CMP_GT_OS);
+        ans |= (mask > 0);
+    }
+    for(int i = dim - (dim%8) + 1 ; i < dim && !ans; i++) {
+        ans |= v[i] < v[i - 1];
+    }
+    return !ans;
+}
+
+
 // basic selectionSort, for comparasons
 void selectionSort(double * v, int dim) {
     for(int i = 0 ; i < dim ; i++) {
@@ -32,21 +47,21 @@ void selectionSort(double * v, int dim) {
 
 void debug(__m512i a) {
     int v[16];
-    _mm512_store_epi32(v,a);
+    _mm512_storeu_epi32(v,a);
     cout<<"printv int: ";
     printv(v,16);
 }
 
 void debug64(__m512i a) {
     long v[8];
-    _mm512_store_epi32(v,a);
+    _mm512_storeu_epi32(v,a);
     cout<<"printv int: ";
     printv(v,8);
 }
 
 void debug(__m512d a) {
     double v[8];
-    _mm512_store_pd(v,a);
+    _mm512_storeu_pd(v,a);
     cout<<"printv double: ";
     printv(v,8);
 }
@@ -110,7 +125,7 @@ void selectionSortAVX512_v2(double * v, int dim) {
     __m512d arr,min_vect;
     // array of indexes, _mm512_maskz_mul_epi32 only considers alternated 32 bit of the register
     long idxs_arr[8] = {0,1,2,3,4,5,6,7};
-    __m512i c,idxs_vect = _mm512_load_epi64(idxs_arr);
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
     __mmask8 mask;
     for(int i = 0 ; i < dim ; i++) {
         // set the variables I'll be using
@@ -239,11 +254,11 @@ void selectionSortAVX512_ChatGPT(double* arr, size_t size) {
     }
 }
 
-
+// best version
 void selectionSortAVX512_v5(double * v, int dim) {
     __m512d arr,min_vect;
     long idxs_arr[8] = {0,1,2,3,4,5,6,7};
-    __m512i c,idxs_vect = _mm512_load_epi64(idxs_arr);
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
     __mmask8 mask;
     for(int i = 0 ; i < dim ; i++) {
         double minimum = v[i];
@@ -274,6 +289,85 @@ void selectionSortAVX512_v5(double * v, int dim) {
     }
 }
 
+// each iteration checks if it's already sorted; inefficient even with already substantially sorted
+void selectionSortAVX512_v6(double * v, int dim) {
+    __m512d arr,min_vect;
+    long idxs_arr[8] = {0,1,2,3,4,5,6,7};
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
+    __mmask8 mask;
+    for(int i = 0 ; i < dim ; i++) {
+        if(isSortedAVX512_v1(&v[i],dim-i)) {
+            break;
+        }
+        double minimum = v[i];
+        double last = minimum;
+        int idx = i;
+        int j = i + 1;
+        min_vect = _mm512_set1_pd(minimum);
+        while(j < dim -8) {
+            arr = _mm512_loadu_pd(&v[j]);
+            mask = _mm512_cmplt_pd_mask(arr, min_vect);
+            if(mask) {
+                minimum = _mm512_reduce_min_pd(arr);
+                min_vect = _mm512_set1_pd(minimum);
+                mask = _mm512_cmpeq_pd_mask(arr,min_vect);
+                c = _mm512_maskz_abs_epi64(mask,idxs_vect);
+                idx = j + _mm512_reduce_max_epi64(c);
+                min_vect = _mm512_set1_pd(minimum);
+            }
+            j+=8;
+        }
+        while(j < dim) {
+            if(v[j] < v[idx]) {
+                idx = j;
+            }
+            j++;
+        }
+        swap(v[i],v[idx]);
+    }
+}
+
+// molto più lento di v6
+void selectionSortAVX512_v7(double * v, int dim) {
+    __m512d arr,min_vect,d;
+    long idxs_arr[8] = {0,1,2,3,4,5,6,7};
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
+    __mmask8 mask;
+    bool notSorted = 1;
+    for(int i = 0 ; i < dim && notSorted; i++) {
+        double minimum = v[i];
+        double last = minimum;
+        int idx = i;
+        int j = i + 1;
+        notSorted = 0;
+        min_vect = _mm512_set1_pd(minimum);
+        while(j < dim - 7) {
+            arr = _mm512_loadu_pd(&v[j]);
+            d = _mm512_loadu_pd(&v[j+1]);
+            mask =_mm512_cmp_pd_mask(arr,d,_CMP_GT_OS);
+            notSorted |= (mask > 0);
+            mask = _mm512_cmplt_pd_mask(arr, min_vect);
+            if(mask) {
+                minimum = _mm512_reduce_min_pd(arr);
+                min_vect = _mm512_set1_pd(minimum);
+                mask = _mm512_cmpeq_pd_mask(arr,min_vect);
+                c = _mm512_maskz_abs_epi64(mask,idxs_vect);
+                idx = j + _mm512_reduce_max_epi64(c);
+                min_vect = _mm512_set1_pd(minimum);
+            }
+            j+=8;
+        }
+        while(j < dim) {
+            if(v[j] < v[idx]) {
+                idx = j;
+            }
+            notSorted |= v[j] < v[j-1];
+            j++;
+        }
+        swap(v[i],v[idx]);
+    }
+}
+
 
 
 void printv(double * v, int n) {
@@ -296,6 +390,23 @@ void printv(long * v, int n) {
         cout<<v[i]<<" ";
     }
     cout<<endl;
+}
+
+
+void generatePseudoSortedArray(double * v, int dim, int limit) {
+    srand(time(NULL));rand();
+    vector<int> toMove(dim,1);
+    for(int i = 0 ; i < dim - limit; i++) {
+        if(toMove[i]) {
+            int idx = rand()%limit;
+            swap(v[i],v[i+idx]);
+            toMove[i] = 0;
+            toMove[i+idx] = 0;
+        }
+    }
+    for(int i = dim - 1; i > dim - limit ; i--) {
+        swap(v[i],v[i-rand()%limit]);
+    }
 }
 
 
@@ -328,6 +439,9 @@ int main(int argn, char ** argv) {
             v[i] = i;
         }
         tmp[i] = v[i];
+    }
+    if(order == 3) {
+        generatePseudoSortedArray(v,n,10);
     }
     v[n] = std::numeric_limits<double>::lowest();
     if(print >= 2) {
@@ -385,6 +499,24 @@ int main(int argn, char ** argv) {
             {
                 Timer t;
                 selectionSortAVX512_v5(v,n);
+                t.stop();
+            }
+            break;
+        case 6:
+            if(print) 
+                cout<<"selectionSortAVX512_v6"<<endl;
+            {
+                Timer t;
+                selectionSortAVX512_v6(v,n);
+                t.stop();
+            }
+            break;
+        case 7:
+            if(print) 
+                cout<<"selectionSortAVX512_v7"<<endl;
+            {
+                Timer t;
+                selectionSortAVX512_v7(v,n);
                 t.stop();
             }
             break;

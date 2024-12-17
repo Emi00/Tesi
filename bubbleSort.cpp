@@ -10,11 +10,13 @@
 
 void bubbleSort(double * v, int n) {
     for(int i = n - 1 ; i >= 0 ; i--) {
+        //Timer t;
         for(int j = 0 ; j < i ; j++) {
             if(v[j] > v[j+1]) {
                 std::swap(v[j],v[j+1]);
             }
         }
+        //t.stop();
     }
 }
 
@@ -43,21 +45,21 @@ void printv(long * v, int n) {
 
 void debug(__m512i a) {
     int v[16];
-    _mm512_store_epi32(v,a);
+    _mm512_storeu_epi32(v,a);
     std::cout<<"printv int: ";
     printv(v,16);
 }
 
 void debug64(__m512i a) {
     long v[8];
-    _mm512_store_epi32(v,a);
+    _mm512_storeu_epi32(v,a);
     std::cout<<"printv int: ";
     printv(v,8);
 }
 
 void debug(__m512d a) {
     double v[8];
-    _mm512_store_pd(v,a);
+    _mm512_storeu_pd(v,a);
     std::cout<<"printv double: ";
     printv(v,8);
 }
@@ -79,20 +81,17 @@ void bubbleSortAVX512_v1(double * v, int dim) {
     for(int i = dim - 1 ; i >= 0 ; i--) {
         double maximum;
         int j = 0;
+        Timer t;
         while(j < i - 8) {
             arr = _mm512_loadu_pd(&v[j]);
             maximum = _mm512_reduce_max_pd(arr);
             if(maximum != v[j+7]) {
-                //Timer t;
-                //for(int ritardo = 0; ritardo < cicliRallenta ; ritardo++) {
                 for(int k = 7 ; k >= 0 ; k--) {
                     if(v[j+k] == maximum) {
                         std::swap(v[j+7],v[j+k]);
                         break;
                     }
                 }
-                //}
-                //t.stop();
             }
             j += 7;
         }
@@ -102,6 +101,7 @@ void bubbleSortAVX512_v1(double * v, int dim) {
             }
             j++;
         }
+        t.stop();
     } 
     //t.stop();
 }
@@ -110,9 +110,10 @@ void bubbleSortAVX512_v1(double * v, int dim) {
 void bubbleSortAVX512_v2(double * v, int dim) {
     __m512d arr,max_vect;
     long idxs_arr[16] = {0,1,2,3,4,5,6,7};
-    __m512i c,idxs_vect = _mm512_load_epi64(idxs_arr);
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
     __mmask8 mask;
     for(int i = dim - 1 ; i >= 0 ; i--) {
+        Timer t;
         double maximum;
         int j = 0;
         while(j < i - 8) {
@@ -137,6 +138,7 @@ void bubbleSortAVX512_v2(double * v, int dim) {
             }
             j++;
         }
+        t.stop();
     }
 }
 
@@ -144,7 +146,7 @@ void bubbleSortAVX512_v2(double * v, int dim) {
 void bubbleSortAVX512_v3(double * v, int dim) {
     __m512d arr,max_vect;
     long idxs_arr[16] = {0,1,2,3,4,5,6,7};
-    __m512i c,idxs_vect = _mm512_load_epi64(idxs_arr);
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
     __mmask8 mask;
     for(int i = dim - 1 ; i >= 0 ; i--) {
         double maximum;
@@ -165,6 +167,76 @@ void bubbleSortAVX512_v3(double * v, int dim) {
             }
             j++;
         }
+    }
+}
+
+// non ordina
+void bubbleSortAVX512_copilot(double * v, int dim) {
+    for(int i = 0 ; i < dim - 1; i++) {
+        int swapped = 0;
+        for(int j = 0 ; j < dim - 1 - i ; j += 8 ) {
+            __m512d current = _mm512_loadu_pd(&v[j]);
+            std::cout<<"curr"<<std::endl;
+            debug(current);
+            __m512d next = _mm512_loadu_pd(&v[j+1]);
+            std::cout<<"next"<<std::endl;
+            debug(next);
+            __mmask8 mask = _mm512_cmp_pd_mask(current,next,_CMP_GT_OQ);
+            std::cout<<"mask"<<std::endl;
+            debug(mask);
+            __m512d min = _mm512_mask_blend_pd(mask,current,next);
+            std::cout<<"min"<<std::endl;
+            debug(min);
+            __m512d max = _mm512_mask_blend_pd(mask,next,current);
+            std::cout<<"max"<<std::endl;
+            debug(max);
+            _mm512_storeu_pd(&v[j],min);
+            _mm512_storeu_pd(&v[j+1],max);
+            printv(&v[j],9);
+        }
+    }
+}
+
+// non ordina
+void bubbleSortAVX512_ChatGPT(double* array, std::size_t dim) {
+    if (!array || dim < 2) return; // Controllo dei limiti
+
+    const std::size_t simd_width = 8; // AVX512 lavora su 8 double contemporaneamente
+
+    // Iterazioni esterne del Bubble Sort
+    for (std::size_t i = 0; i < dim - 1; ++i) {
+        bool swapped = false;
+
+        // Elaborazione in blocchi SIMD
+        for (std::size_t j = 0; j + simd_width <= dim - i - 1; j += simd_width) {
+            // Carica 8 double consecutivi
+            __m512d current = _mm512_loadu_pd(&array[j]);
+            __m512d next = _mm512_loadu_pd(&array[j + 1]);
+
+            // Confronta gli elementi e scambia se necessario
+            __mmask8 mask = _mm512_cmp_pd_mask(current, next, _CMP_GT_OQ);
+            if (mask) {
+                swapped = true;
+                // Scambia gli elementi
+                __m512d swapped_current = _mm512_mask_blend_pd(mask, current, next);
+                __m512d swapped_next = _mm512_mask_blend_pd(mask, next, current);
+
+                // Memorizza i risultati
+                _mm512_storeu_pd(&array[j], swapped_current);
+                _mm512_storeu_pd(&array[j + 1], swapped_next);
+            }
+        }
+
+        // Gestione della coda non allineata ai blocchi SIMD
+        for (std::size_t j = dim - i - 1 - (dim - i - 1) % simd_width; j < dim - i - 1; ++j) {
+            if (array[j] > array[j + 1]) {
+                swapped = true;
+                std::swap(array[j], array[j + 1]);
+            }
+        }
+
+        // Se nessuno scambio è stato effettuato, l'array è ordinato
+        if (!swapped) break;
     }
 }
 
@@ -209,18 +281,18 @@ int main(int argn, char ** argv) {
             if(print >= 1) 
                 std::cout<<"bubbleSort"<<std::endl;
             {
-                Timer t;
+                //Timer t;
                 bubbleSort(v,n);
-                t.stop();
+                //t.stop();
             }
             break;
         case 1:
             if(print >= 1) 
                 std::cout<<"bubbleSortAVX512_v1"<<std::endl;
             {
-                Timer t;
+                //Timer t;
                 bubbleSortAVX512_v1(v,n);
-                t.stop();
+                //t.stop();
             }
             break;
         case 2:
@@ -238,6 +310,24 @@ int main(int argn, char ** argv) {
             {
                 Timer t;
                 bubbleSortAVX512_v3(v,n);
+                t.stop();
+            }
+            break;
+        case 4:
+            if(print >= 1) 
+                std::cout<<"bubbleSortAVX512_copilot"<<std::endl;
+            {
+                Timer t;
+                bubbleSortAVX512_copilot(v,n);
+                t.stop();
+            }
+            break;
+        case 5:
+            if(print >= 1) 
+                std::cout<<"bubbleSortAVX512_ChatGPT"<<std::endl;
+            {
+                Timer t;
+                bubbleSortAVX512_ChatGPT(v,n);
                 t.stop();
             }
             break;

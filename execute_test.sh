@@ -13,16 +13,16 @@ version=${3}
 order=${4}
 dim=${5}
 rounds=${6}
-file=tmp_selectionSort_${dim}_${flag}_v${version}_$order
+file=tmp_${algo}_${dim}_${flag}_v${version}_$order
 rm data/$file
 
 
 g++ $algo.cpp -o $algo -$flag -march=znver5
-echo selectionSort $flag rounds $rounds dim $dim algo v$version
+echo $algo $flag rounds $rounds dim $dim algo v$version
 for round in $(seq 1 $rounds)
 do
     ./$algo $dim $version 0 $order >> data/$file
-    sleep 0.1
+    sleep 0.5
 done
 
 ./statistics.py data/$file
