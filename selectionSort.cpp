@@ -275,7 +275,6 @@ void selectionSortAVX512_v5(double * v, int dim) {
                 mask = _mm512_cmpeq_pd_mask(arr,min_vect);
                 c = _mm512_maskz_abs_epi64(mask,idxs_vect);
                 idx = j + _mm512_reduce_max_epi64(c);
-                min_vect = _mm512_set1_pd(minimum);
             }
             j+=8;
         }

@@ -6,13 +6,14 @@
 
 #pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl,avx512vbmi,avx512ifma,avx512pf,avx512er,avx5124fmaps,avx5124vnniw,avx512bitalg,avx512vp2intersect")
 #include <immintrin.h>
+
 void insertionSort(double * v, int n) {
     for (int i = 1; i < n; ++i) {
         int key = v[i];
         int j = i - 1;
         while (j >= 0 && v[j] > key) {
             v[j + 1] = v[j];
-            j = j - 1;
+            j--;
         }
         v[j + 1] = key;
     }
@@ -73,7 +74,7 @@ void insertionSortAVX512_v1(double * v, int dim) {
     }
 }
 
-// NON funziona, probabilmente è sistemabile
+// NON funziona, sistemabile rendendolo analogo a v1 ma con istruzioni in più come la set1, non ha senso
 void insertionSortAVX512_ChatGPT(double* arr, size_t size) {
     for (size_t i = 1; i < size; i++) {
         double key = arr[i];  // Current element to insert
@@ -107,6 +108,23 @@ void insertionSortAVX512_ChatGPT(double* arr, size_t size) {
 
         // Place the key in the correct position
         arr[j] = key;
+    }
+}
+
+void insertionSortAVX512_v2(double * v, int dim) {
+    for (int i = 1; i < dim; ++i) {
+        int j = i-1;
+        double key = v[i];
+        while(j >= 8 && v[j-8] > key) {
+            __m512d vec = _mm512_loadu_pd(&v[j-7]);
+            _mm512_storeu_pd(&v[j-6],vec);
+            j -= 8;
+        }
+        while (j >= 0 && v[j] > key) {
+            v[j + 1] = v[j];
+            j--;
+        }
+        v[j + 1] = key;
     }
 }
 
@@ -186,6 +204,15 @@ int main(int argn, char ** argv) {
             {
                 Timer t;
                 insertionSortAVX512_ChatGPT(v,n);
+                t.stop();
+            }
+            break;
+        case 4:
+            if(print) 
+                std::cout<<"insertionSortAVX512_v2"<<std::endl;
+            {
+                Timer t;
+                insertionSortAVX512_v2(v,n);
                 t.stop();
             }
             break;

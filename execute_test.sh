@@ -22,7 +22,7 @@ echo $algo $flag rounds $rounds dim $dim algo v$version
 for round in $(seq 1 $rounds)
 do
     ./$algo $dim $version 0 $order >> data/$file
-    sleep 0.5
+    sleep 1
 done
 
 ./statistics.py data/$file
