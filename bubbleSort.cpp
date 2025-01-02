@@ -4,7 +4,7 @@
 #include <climits>
 #include "utils/utilities.cpp"
 
-#pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl,avx512vbmi,avx512ifma,avx512pf,avx512er,avx5124fmaps,avx5124vnniw,avx512bitalg,avx512vp2intersect")
+//#pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl,avx512vbmi,avx512ifma,avx512pf,avx512er,avx5124fmaps,avx5124vnniw,avx512bitalg,avx512vp2intersect")
 #include <immintrin.h>
 
 
@@ -29,17 +29,6 @@ void bubbleSortAVX512_v1(double * v, int dim) {
             arr = _mm512_loadu_pd(&v[j]);
             maximum = _mm512_reduce_max_pd(arr);
             if(maximum != v[j+7]) {
-                //Timer t;
-                //for(int temporeggio = 0 ; temporeggio < 10000 ; temporeggio++) {
-                //for(int k = 7 ; k >= 0 ; k--) {
-                //    if(v[j+k] == maximum) {
-                //        //std::swap(v[j+7],v[j+k]);
-                //        //std::swap(v[j+k],v[j+7]);
-                //        break;
-                //    }
-                //}
-                //}
-                //t.stop();
                 for(int k = 7 ; k >= 0 ; k--) {
                     if(v[j+k] == maximum) {
                         std::swap(v[j+7],v[j+k]);
@@ -71,15 +60,11 @@ void bubbleSortAVX512_v2(double * v, int dim) {
             arr = _mm512_loadu_pd(&v[j]);
             maximum = _mm512_reduce_max_pd(arr);
             if(maximum != v[j+7]) {
-                //Timer t;
-                //for(int temporeggio = 0 ; temporeggio < 10000 ; temporeggio++) {
                 max_vect = _mm512_set1_pd(maximum);
                 mask = _mm512_cmpeq_pd_mask(arr,max_vect);
                 c = _mm512_maskz_abs_epi64(mask,idxs_vect);
                 int idx = j + _mm512_reduce_max_epi64(c);
                 std::swap(v[idx],v[j+7]);
-                //}
-                //t.stop();
             }
             j += 7;
         }
@@ -215,7 +200,7 @@ int main(int argn, char ** argv) {
     srand(time(NULL));rand();
     for(int i = 0 ; i < n ; ++i) {
         if(order == 0) {
-            v[i] = (double)(rand()%10);
+            v[i] = (double)rand();
         } else if(order == 1){ // decreasing
             v[i] = n - i;
         } else { // increasing

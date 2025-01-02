@@ -1,0 +1,165 @@
+bubbleSortAVX512_v1(double*, int):
+        mov     r9d, esi				|
+        mov     r8d, esi				|
+        dec     r8d					|-> inizio funzione
+        js      .L11					|
+        sub     r9d, 9				|
+        jmp     .L13					|
+.L36:
+        vmovsd  QWORD PTR [r10], xmm1
+        vmovsd  QWORD PTR [rdx], xmm2
+.L14:
+        add     eax, 7
+        add     rcx, 56
+        cmp     eax, r9d
+        jge     .L35
+.L19:
+        mov     r10, rcx
+        vmovupd zmm0, ZMMWORD PTR [rcx-56]		|
+        vextractf64x4   ymm1, zmm0, 0x1			|
+        vmaxpd  ymm1, ymm1, ymm0					|
+        vextractf64x2   xmm0, ymm1, 0x1			|
+        vmaxpd  xmm0, xmm0, xmm1					|-> loadu + reduce_max
+        vpermilpd       xmm1, xmm0, 1			|
+        vmaxpd  xmm0, xmm0, xmm1					|
+        vmovsd  xmm2, QWORD PTR [rcx]			|
+        vucomisd        xmm2, xmm0				|
+        jp      .L28		|
+        je      .L14			|-> continuo il for interno
+.L28:
+        mov     rdx, rcx							|
+        lea     rsi, [rcx-64]					|
+.L18:
+        vmovsd  xmm1, QWORD PTR [rdx]			|
+        vucomisd        xmm1, xmm0				|
+        jp      .L16		|-> 
+        je      .L36			|-> continuo il for interno
+.L16:
+        sub     rdx, 8							|
+        cmp     rdx, rsi							|
+        jne     .L18		|-> ciclo for per trovare il massimo degli 8
+        jmp     .L14			|-> continuo il for interno
+.L35:
+        cmp     eax, r8d
+        jge     .L20			|-> parte finale ciclo for esterno
+.L26:
+        cdqe
+        jmp     .L23
+.L21:
+        inc     rax
+        cmp     r8d, eax
+        jle     .L20
+.L23:
+        vmovsd  xmm0, QWORD PTR [rdi+rax*8]			|
+        vmovsd  xmm1, QWORD PTR [rdi+8+rax*8]		|
+        vcomisd xmm0, xmm1							|
+        jbe     .L21									|-> ciclo while SISD
+        vmovsd  QWORD PTR [rdi+rax*8], xmm1			|
+        vmovsd  QWORD PTR [rdi+8+rax*8], xmm0		|
+        jmp     .L21
+.L37:
+        ret
+.L20:
+        dec     r8d					|
+        dec     r9d					|
+.L13:								|-> parte finale del ciclo for esterno
+        lea     rcx, [rdi+56]		|
+        mov     eax, 0				|
+        cmp     r8d, 8				|
+        jg      .L19			|-> torno alla parte della funzione giusta in base alla lunghezza rimasta
+        test    r8d, r8d				|
+        jle     .L37					|
+        mov     eax, 0				|
+        jmp     .L26					|
+.L11:
+        ret
+        
+        
+
+bubbleSortAVX512_v2(double*, int):
+        mov     r9d, esi										|
+        mov     r8d, esi										|
+        dec     r8d											|
+        js      .L38											|-> inizio funzione
+        sub     r9d, 9										|
+        vmovdqa64       zmm3, ZMMWORD PTR .LC0[rip]			|
+        jmp     .L40											|
+.L52:
+        vbroadcastsd    zmm0, xmm0							|
+        vcmppd  k1, zmm2, zmm0, 0							|
+        vpabsq  zmm0{k1}{z}, zmm3							|
+        vshufi64x2      zmm2, zmm0, zmm0, 78					|
+        vpmaxsq zmm0, zmm0, zmm2								|
+        vshufi64x2      zmm2, zmm0, zmm0, 177				|
+        vpmaxsq zmm0, zmm0, zmm2								|-> set1+cmpeq+mask+reduce_max
+        vpermq  zmm2, zmm0, 177								|
+        vpmaxsq zmm0, zmm0, zmm2								|
+        vmovq   rax, xmm0									|
+        add     eax, edx										|
+        cdqe													|
+        lea     rax, [rdi+rax*8]								|
+        vmovsd  xmm0, QWORD PTR [rax]						|
+        vmovsd  QWORD PTR [rax], xmm1						|
+        vmovsd  QWORD PTR [rsi], xmm0						|
+.L41:
+        add     edx, 7			|
+        add     rcx, 56			|
+        cmp     edx, r9d			|-> gestione while SIMD
+        jge     .L57				|
+.L43:
+        mov     rsi, rcx								|
+        vmovupd zmm2, ZMMWORD PTR [rcx-56]			|
+        vextractf64x4   ymm1, zmm2, 0x1				|
+        vmaxpd  ymm1, ymm1, ymm2						|
+        vextractf64x2   xmm0, ymm1, 0x1				|
+        vmaxpd  xmm0, xmm0, xmm1						|-> loadu + reduce_max
+        vpermilpd       xmm1, xmm0, 1				|
+        vmaxpd  xmm0, xmm0, xmm1						|
+        vmovsd  xmm1, QWORD PTR [rcx]				|
+        vucomisd        xmm1, xmm0					|
+        jp      .L52									|
+        je      .L41									|
+        jmp     .L52									|
+.L57:
+        cmp     edx, r8d			|
+        jge     .L44				|-> gestion while SISD
+.L50:
+        movsx   rax, edx
+        jmp     .L47
+.L45:
+        inc     rax
+        cmp     r8d, eax
+        jle     .L44
+.L47:
+        vmovsd  xmm0, QWORD PTR [rdi+rax*8]		|
+        vmovsd  xmm1, QWORD PTR [rdi+8+rax*8]	|
+        vcomisd xmm0, xmm1						|
+        jbe     .L45								|-> while SISD
+        vmovsd  QWORD PTR [rdi+rax*8], xmm1		|
+        vmovsd  QWORD PTR [rdi+8+rax*8], xmm0	|
+        jmp     .L45
+.L58:
+        ret
+.L44:
+        dec     r8d
+        dec     r9d
+.L40:
+        lea     rcx, [rdi+56]		|
+        mov     edx, 0				|
+        cmp     r8d, 8				|
+        jg      .L43					|
+        test    r8d, r8d				|-> gestione for interno
+        jle     .L58					|
+        mov     edx, 0				|
+        jmp     .L50					|
+.L38:
+        ret
+.LC0:
+        .quad   0		|
+        .quad   1		|
+        .quad   2		|
+        .quad   3		|
+        .quad   4		|-> numeri in memoria per gli indici dei registri zmm
+        .quad   5		|
+        .quad   6		|
+        .quad   7		|

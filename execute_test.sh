@@ -26,3 +26,5 @@ do
 done
 
 ./statistics.py data/$file
+
+exit 0

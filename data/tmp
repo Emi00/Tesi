@@ -1,1 +1,28 @@
-746
+void bubbleSortAVX512_v2(double * v, int dim) {
+    __m512d arr,max_vect;
+    long idxs_arr[16] = {0,1,2,3,4,5,6,7};
+    __m512i c,idxs_vect = _mm512_loadu_epi64(idxs_arr);
+    __mmask8 mask;
+    for(int i = dim - 1 ; i >= 0 ; i--) {
+        double maximum;
+        int j = 0;
+        while(j < i - 8) {
+            arr = _mm512_loadu_pd(&v[j]);
+            maximum = _mm512_reduce_max_pd(arr);
+            if(maximum != v[j+7]) {
+                max_vect = _mm512_set1_pd(maximum);
+                mask = _mm512_cmpeq_pd_mask(arr,max_vect);
+                c = _mm512_maskz_abs_epi64(mask,idxs_vect);
+                int idx = j + _mm512_reduce_max_epi64(c);
+                std::swap(v[idx],v[j+7]);
+            }
+            j += 7;
+        }
+        while(j <= i - 1) {
+            if(v[j] > v[j+1]) {
+                std::swap(v[j],v[j+1]);
+            }
+            j++;
+        }
+    }
+}
