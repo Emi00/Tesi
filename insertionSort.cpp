@@ -65,7 +65,7 @@ void insertionSortAVX512_v1(double * v, int dim) {
     for (int i = 1; i < dim; ++i) {
         int j = i-1;
         double key = v[i];
-        while(j >= 8 && v[j-8] > key) {
+        while(j >= 7 && v[j-7] > key) {
             whileSIMD++;
             __m512d vec = _mm512_loadu_pd(&v[j-7]);
             _mm512_storeu_pd(&v[j-6],vec);
@@ -93,17 +93,15 @@ void insertionSortAVX512_v2(double * v, int dim) {
             _mm512_storeu_pd(&v[j-6],vec);
             j -= 8;
         }
-        if(j >= 7) {
+        if(j >= 7 && v[j-1] > key) {
             ifSIMD++;
             current = _mm512_set1_pd(key);
             a = _mm512_loadu_pd(&v[j-7]);
             mask = _mm512_cmplt_pd_mask(current,a);
-            if(mask) {
-                b = _mm512_loadu_pd(&v[j-6]);
-                b = _mm512_mask_blend_pd(mask,b,a);
-                _mm512_storeu_pd(&v[j-6],b);
-                j-=8-_tzcnt_u32(mask);
-            }
+            b = _mm512_loadu_pd(&v[j-6]);
+            b = _mm512_mask_blend_pd(mask,b,a);
+            _mm512_storeu_pd(&v[j-6],b);
+            j-=8-_tzcnt_u32(mask);
         }
         while (j >= 0 && v[j] > key) {
             whileSISD++;
@@ -152,7 +150,31 @@ void insertionSortAVX512_ChatGPT(double* arr, size_t size) {
     }
 }
 
-
+// come da aspettative è molto lento
+void insertionSortAVX512_v3(double * v, int dim) {
+    __m512d current, a,b;
+    __mmask8 mask;
+    for (int i = 1; i < dim; ++i) {
+        int j = i-1;
+        double key = v[i];
+        while(j >= 7 && v[j-1] > key) {
+            ifSIMD++;
+            current = _mm512_set1_pd(key);
+            a = _mm512_loadu_pd(&v[j-7]);
+            mask = _mm512_cmplt_pd_mask(current,a);
+            b = _mm512_loadu_pd(&v[j-6]);
+            b = _mm512_mask_blend_pd(mask,b,a);
+            _mm512_storeu_pd(&v[j-6],b);
+            j-=8-_tzcnt_u32(mask);
+        }
+        while (j >= 0 && v[j] > key) {
+            whileSISD++;
+            v[j + 1] = v[j];
+            j--;
+        }
+        v[j + 1] = key;
+    }
+}
 
 
 int main(int argn, char ** argv) {
@@ -238,6 +260,15 @@ int main(int argn, char ** argv) {
             {
                 Timer t;
                 insertionSortAVX512_v2(v,n);
+                t.stop();
+            }
+            break;
+        case 5:
+            if(print) 
+                std::cout<<"insertionSortAVX512_v3"<<std::endl;
+            {
+                Timer t;
+                insertionSortAVX512_v3(v,n);
                 t.stop();
             }
             break;

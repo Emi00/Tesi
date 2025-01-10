@@ -12,6 +12,13 @@ def stdev(v) :
     s = sum([(x-mean)**2 for x in v])
     return (s/len(v))**0.5
 
+def median(v) :
+    v1 = v
+    v1.sort()
+    if len(v1) % 2 == 0:
+        return (v1[len(v1)//2]+v1[(len(v1)+1)//2])/2
+    return v1[len(v1)//2]
+
 def get_files_with_prefix(prefix):
     # Get the list of files in the current directory
     files = os.listdir('./data')
@@ -80,7 +87,8 @@ def basic_stats(fileName) :
                     v.append(int(x))
             except :
                 pass
-    print(f"{fileName} {int(round(avg(v),0))}±{int(round(stdev(v),0))}")
+    print(f"{fileName} {int(round(avg(v),0))}±{int(round(stdev(v),0))} median: {median(v)}")
+    print(f"{int(round(avg(v),0))} & {int(round(stdev(v),0))} & {median(v)}")
 
 def get_param(string) :
     v = string.split(",")

@@ -254,7 +254,7 @@ void selectionSortAVX512_ChatGPT(double* arr, size_t size) {
     }
 }
 
-// best version
+// almost fastest
 void selectionSortAVX512_v5(double * v, int dim) {
     __m512d arr,min_vect;
     long idxs_arr[8] = {0,1,2,3,4,5,6,7};
@@ -367,6 +367,37 @@ void selectionSortAVX512_v7(double * v, int dim) {
     }
 }
 
+
+// v5 + faster search for index of min
+void selectionSortAVX512_v8(double * v, int dim) {
+    __m512d arr,min_vect;
+    __mmask8 mask;
+    for(int i = 0 ; i < dim ; i++) {
+        double minimum = v[i];
+        double last = minimum;
+        int idx = i;
+        int j = i + 1;
+        min_vect = _mm512_set1_pd(minimum);
+        while(j < dim -8) {
+            arr = _mm512_loadu_pd(&v[j]);
+            mask = _mm512_cmplt_pd_mask(arr, min_vect);
+            if(mask) {
+                minimum = _mm512_reduce_min_pd(arr);
+                min_vect = _mm512_set1_pd(minimum);
+                mask = _mm512_cmpeq_pd_mask(arr,min_vect);
+                idx = _tzcnt_u32(mask) + j;
+            }
+            j+=8;
+        }
+        while(j < dim) {
+            if(v[j] < v[idx]) {
+                idx = j;
+            }
+            j++;
+        }
+        swap(v[i],v[idx]);
+    }
+}
 
 
 void printv(double * v, int n) {
@@ -516,6 +547,15 @@ int main(int argn, char ** argv) {
             {
                 Timer t;
                 selectionSortAVX512_v7(v,n);
+                t.stop();
+            }
+            break;
+        case 8:
+            if(print) 
+                cout<<"selectionSortAVX512_v8"<<endl;
+            {
+                Timer t;
+                selectionSortAVX512_v8(v,n);
                 t.stop();
             }
             break;

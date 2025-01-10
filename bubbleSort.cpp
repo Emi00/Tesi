@@ -7,12 +7,15 @@
 //#pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl,avx512vbmi,avx512ifma,avx512pf,avx512er,avx5124fmaps,avx5124vnniw,avx512bitalg,avx512vp2intersect")
 #include <immintrin.h>
 
-
+long long unsigned int cicli2 = 0;
+long long unsigned int cicli1 = 0;
 
 void bubbleSort(double * v, int n) {
     for(int i = n - 1 ; i >= 0 ; i--) {
         for(int j = 0 ; j < i ; j++) {
+            cicli1++;
             if(v[j] > v[j+1]) {
+                cicli2++;
                 std::swap(v[j],v[j+1]);
             }
         }
@@ -28,7 +31,9 @@ void bubbleSortAVX512_v1(double * v, int dim) {
         while(j < i - 8) {
             arr = _mm512_loadu_pd(&v[j]);
             maximum = _mm512_reduce_max_pd(arr);
+            cicli1++;
             if(maximum != v[j+7]) {
+                cicli2++;
                 for(int k = 7 ; k >= 0 ; k--) {
                     if(v[j+k] == maximum) {
                         std::swap(v[j+7],v[j+k]);
@@ -59,7 +64,9 @@ void bubbleSortAVX512_v2(double * v, int dim) {
         while(j < i - 8) {
             arr = _mm512_loadu_pd(&v[j]);
             maximum = _mm512_reduce_max_pd(arr);
+            cicli1++;
             if(maximum != v[j+7]) {
+                cicli2++;
                 max_vect = _mm512_set1_pd(maximum);
                 mask = _mm512_cmpeq_pd_mask(arr,max_vect);
                 c = _mm512_maskz_abs_epi64(mask,idxs_vect);
@@ -175,6 +182,107 @@ void bubbleSortAVX512_ChatGPT(double* array, std::size_t dim) {
     }
 }
 
+void bubbleSortAVX512_v4(double * v, int dim) {
+    __m512d arr, curr;
+    __mmask8 mask;
+    for(int i = dim - 1 ; i >= 0 ; i--) {
+        int j = 0;
+        int maximum = v[j];
+        curr = _mm512_set1_pd(v[j]);
+        while(j < i - 8) {
+            cicli1++;
+            arr = _mm512_loadu_pd(&v[j]);
+            mask = _mm512_cmplt_pd_mask(curr,arr);
+            int idx = j;
+            if(mask) {
+                cicli2++;
+                for(int k = idx ; k < j+8 ; k++) {
+                    if(v[k] > maximum) {
+                        idx = k;
+                        maximum = v[k];
+                    }
+                }
+            }
+            j+=7;
+            std::swap(v[j],v[idx]);
+        }
+        while(j <= i - 1) {
+            if(v[j] > v[j+1]) {
+                std::swap(v[j],v[j+1]);
+            }
+            j++;
+        }
+    }
+}
+
+void bubbleSortAVX512_v5(double * v, int dim) {
+    __m512d arr, curr;
+    __mmask8 mask;
+    for(int i = dim - 1 ; i >= 0 ; i--) {
+        int j = 0;
+        double maximum = v[j];
+        while(j < i - 8) {
+            cicli1++;
+            arr = _mm512_loadu_pd(&v[j]);
+            curr = _mm512_set1_pd(v[j+7]);
+            mask = _mm512_cmplt_pd_mask(curr,arr);
+            if(mask) {
+                maximum = _mm512_reduce_max_pd(arr);
+                cicli2 += (v[j]==maximum);
+                curr = _mm512_set1_pd(maximum);
+                mask = _mm512_cmpeq_pd_mask(arr,curr);
+                int idx = _tzcnt_u32(mask) + j;
+                std::swap(v[j+7],v[idx]);
+            }
+            j+=7;
+        }
+        while(j <= i - 1) {
+            if(v[j] > v[j+1]) {
+                std::swap(v[j],v[j+1]);
+            }
+            j++;
+        }
+    }
+}
+
+
+void bubbleSortAVX512_v6(double * v, int dim) {
+    __m512d arr, curr, last;
+    __mmask8 mask;
+    for(int i = dim - 1 ; i >= 0 ; i--) {
+        int j = 1;
+        last =  _mm512_set1_pd(v[0]);
+        while(j < i - 8) {
+            printv(v,dim);
+            arr = _mm512_loadu_pd(&v[j]);
+            mask = _mm512_cmplt_pd_mask(last,arr);
+            if(!mask) {
+                cicli1++;
+                std::swap(v[j+7],v[j-1]);
+            } else {
+                curr = _mm512_set1_pd(v[j+7]);
+                mask = _mm512_cmplt_pd_mask(curr,arr);
+                if(mask) {
+                    cicli2++;
+                    double maximum = _mm512_reduce_max_pd(arr);
+                    curr = _mm512_set1_pd(maximum);
+                    last = curr;
+                    mask = _mm512_cmpeq_pd_mask(arr,curr);
+                    int idx = _tzcnt_u32(mask) + j;
+                    std::swap(v[j+7],v[idx]);
+                }
+            }
+            j+=8;
+        }
+        while(j <= i ) {
+            if(v[j-1] > v[j]) {
+                std::swap(v[j-1],v[j]);
+            }
+            j++;
+        }
+    }
+}
+
 int main(int argn, char ** argv) {
     int n = 8;
     // array dimension
@@ -196,15 +304,18 @@ int main(int argn, char ** argv) {
         order = atoi(argv[4]);
     }
     double v[n];
-    double tmp[n];
+    double tmp[n] = {18, 2, 27, 3, 13, 5, 14, 20, 3, 18, 1, 13, 4, 21, 16, 8, 28, 7, 15, 23, 25, 15, 10, 22, 1, 24, 28, 13, 24, 20};
     srand(time(NULL));rand();
     for(int i = 0 ; i < n ; ++i) {
         if(order == 0) {
             v[i] = (double)rand();
         } else if(order == 1){ // decreasing
             v[i] = n - i;
-        } else { // increasing
+        } else if(order == 2){ // increasing
             v[i] = i;
+        } else {
+            //v[i] = (double)(rand()%n);
+            v[i] = tmp[i];
         }
         tmp[i] = v[i];
     }
@@ -272,6 +383,33 @@ int main(int argn, char ** argv) {
                 t.stop();
             }
             break;
+        case 6:
+            if(print >= 1) 
+                std::cout<<"bubbleSortAVX512_v4"<<std::endl;
+            {
+                Timer t;
+                bubbleSortAVX512_v4(v,n);
+                t.stop();
+            }
+            break;
+        case 7:
+            if(print >= 1) 
+                std::cout<<"bubbleSortAVX512_v5"<<std::endl;
+            {
+                Timer t;
+                bubbleSortAVX512_v5(v,n);
+                t.stop();
+            }
+            break;
+        case 8:
+            if(print >= 1) 
+                std::cout<<"bubbleSortAVX512_v6"<<std::endl;
+            {
+                Timer t;
+                bubbleSortAVX512_v6(v,n);
+                t.stop();
+            }
+            break;
         default:
             if(print >= 1) 
                 std::cout<<"Algoritmo non trovato"<<std::endl;
@@ -280,7 +418,7 @@ int main(int argn, char ** argv) {
         printv(v,n);
     }
     if(print >= 1) {
-        bubbleSort(tmp,n);
+        sort(tmp,n);
         bool ok = 1;
         for(int i = 0 ; i < n ; i++) {
             ok &= (v[i] == tmp[i]);
@@ -291,4 +429,5 @@ int main(int argn, char ** argv) {
             std::cout<<"NOT sorted"<<std::endl;
         }
     }
+    std::cout<<"cicli1: "<<cicli1<<" cicli2: "<<cicli2<<" rapporto: "<<double(cicli2)/double(cicli1)<<std::endl;
 }
