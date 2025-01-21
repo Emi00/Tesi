@@ -2,6 +2,8 @@
 import sys
 import os
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def avg(v) :
@@ -112,13 +114,119 @@ def plot(data,graphType) :
     except :
         print("errore")
 
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def funzione():
+    datas = {}
+    algos = ["insertionSort", "selectionSort", "bubbleSort"]
+    lengths = ["1000", "10000", "100000"]
+    flags = ["O1", "O2"]
+    versions = {
+        "insertionSort": ["0", "2", "4"],
+        "selectionSort": ["0", "1", "2", "3", "8"],
+        "bubbleSort": ["0", "1", "8"]
+    }
+
+    for algo in algos:
+        if algo not in datas:
+            datas[algo] = {}
+        for length in lengths:
+            if length not in datas[algo]:
+                datas[algo][length] = {}
+            for flag in flags:
+                if flag not in datas[algo][length]:
+                    datas[algo][length][flag] = {}
+                for version in versions[algo]:
+                    file = f"data/tmp_{algo}_{length}_{flag}_v{version}_0"
+                    try:
+                        with open(file, "rb") as f:
+                            a = f.read().decode()
+                            v = []
+                            for x in a.split("\n"):
+                                if x.isdigit():  # Controlla che la riga sia un numero
+                                    v.append(int(x))
+                            if v:
+                                median_value = np.median(v)
+                                datas[algo][length][flag][version] = median_value
+                    except FileNotFoundError:
+                        print(f"file non trovato {file}")
+                        pass
+
+    
+    algos = ["insertionSort", "selectionSort", "bubbleSort"]
+    for algo in algos:
+        plt.figure()
+        for flag in ["O1", "O2"]:
+            for version in versions[algo]:
+                x = []
+                y = []
+                for length, flags in datas[algo].items():
+                    if flag in flags and version in flags[flag]:
+                        x.append(int(length))
+                        y.append(flags[flag][version])
+                if x and y:
+                    plt.plot(x, y, marker='o', label=f"{algo} {flag} v{version}")
+        
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlabel('Data Length')
+        plt.ylabel('Median Time (ms)')
+        plt.legend()
+        plt.title(f'Algorithm Performance - {algo}')
+        plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+def myFunction() :
+    datas = []
+    algos = ["insertionSort","selectionSort","bubbleSort"]
+    lenghts = ["1000","10000","100000"]
+    flags = ["O1","O2"]
+    for algo in algos :
+        tmp1 = []
+        for lenght in lenghts :
+            tmp2 = []
+            for flag in flags :
+                tmp3 = []
+                if "insertion" in algo :
+                    for version in ["0","2","4"] :
+                        file = "data/tmp_"+algo+"_"+lenght+"_"+flag+"_v"+version+"_0"
+                        try :
+                            with open(file,"rb") as f :
+                                a = f.read().decode()
+                                v = []
+                                for x in a.split("\n") :
+                                    if len(x) > 0 :
+                                        v.append(int(x))
+                            tmp3[version] = v
+                        except :
+                            print(f"file non trovato {file}")
+                            pass
+                    
+                
+    print(datas)
+
 def main() :
     if len(sys.argv) < 2 :
         print("Usage:")
         print("statistics.py nameFIle\tto print average and standard deviation")
         print("statistics.py [histogram/box] algo,dim,optimization,version,order\tto print graphs ( . means any)")
     if len(sys.argv) == 2 :
-        basic_stats(sys.argv[1])
+        if "my" in sys.argv[1] :
+             funzione()
+        else :
+            basic_stats(sys.argv[1])
         return
     # prendi tutti i file della cartella corrente che iniziano per sys.argv[1] ed estraine i dati, poi plotta i risultati raccolti
     if len(sys.argv) > 2 :

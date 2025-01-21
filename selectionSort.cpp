@@ -81,7 +81,7 @@ void debug(__mmask8 m) {
 
 void selectionSortAVX512_v1(double * v, int dim) {
     // declare the variable I'll be using
-    __m512d arr;
+    __m512d vec;
     for(int i = 0 ; i < dim ; i++) {
         // set the variables I'll be using
         double minimum = v[i];
@@ -90,10 +90,10 @@ void selectionSortAVX512_v1(double * v, int dim) {
         int j = i + 1;
         // must not load longer than array dim, it MAY cause a SIGSEGV
         while(j <= dim - 8) {
-            // load in the arr regiser the next 8 values
-            arr = _mm512_loadu_pd(&v[j]);
+            // load in the vec regiser the next 8 values
+            vec = _mm512_loadu_pd(&v[j]);
             // set the minimum variable to the minimum between current min and next 8 values
-            minimum = min(minimum,_mm512_reduce_min_pd(arr));
+            minimum = min(minimum,_mm512_reduce_min_pd(vec));
             // if minimum is updated
             if(minimum != lastMin) {
                 // set lastMin as current min
@@ -370,7 +370,7 @@ void selectionSortAVX512_v7(double * v, int dim) {
 
 // v5 + faster search for index of min
 void selectionSortAVX512_v8(double * v, int dim) {
-    __m512d arr,min_vect;
+    __m512d vec,min_vect;
     __mmask8 mask;
     for(int i = 0 ; i < dim ; i++) {
         double minimum = v[i];
@@ -379,12 +379,12 @@ void selectionSortAVX512_v8(double * v, int dim) {
         int j = i + 1;
         min_vect = _mm512_set1_pd(minimum);
         while(j < dim -8) {
-            arr = _mm512_loadu_pd(&v[j]);
-            mask = _mm512_cmplt_pd_mask(arr, min_vect);
+            vec = _mm512_loadu_pd(&v[j]);
+            mask = _mm512_cmplt_pd_mask(vec, min_vect);
             if(mask) {
-                minimum = _mm512_reduce_min_pd(arr);
+                minimum = _mm512_reduce_min_pd(vec);
                 min_vect = _mm512_set1_pd(minimum);
-                mask = _mm512_cmpeq_pd_mask(arr,min_vect);
+                mask = _mm512_cmpeq_pd_mask(vec,min_vect);
                 idx = _tzcnt_u32(mask) + j;
             }
             j+=8;
@@ -483,7 +483,7 @@ int main(int argn, char ** argv) {
                 cout<<"selectionSort"<<endl;
             {
                 Timer t;
-                selectionSort(v,n);
+                selectionSort(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -492,7 +492,7 @@ int main(int argn, char ** argv) {
                 cout<<"selectionSortAVX512_v1"<<endl;
             {
                 Timer t;
-                selectionSortAVX512_v1(v,n);
+                selectionSortAVX512_v1(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -501,7 +501,7 @@ int main(int argn, char ** argv) {
                 cout<<"selectionSortAVX512_v2"<<endl;
             {
                 Timer t;
-                selectionSortAVX512_v2(v,n);
+                selectionSortAVX512_v2(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -510,7 +510,7 @@ int main(int argn, char ** argv) {
                 cout<<"selectionSortAVX512_copilot"<<endl;
             {
                 Timer t;
-                selectionSortAVX512_copilot(v,n);
+                selectionSortAVX512_copilot(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -555,7 +555,7 @@ int main(int argn, char ** argv) {
                 cout<<"selectionSortAVX512_v8"<<endl;
             {
                 Timer t;
-                selectionSortAVX512_v8(v,n);
+                selectionSortAVX512_v8(v,n); // nella tesi
                 t.stop();
             }
             break;

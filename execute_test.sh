@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 if [ $# -lt 6 ]; then
     echo "Usage: $0 algo flag version order dim rounds"
     exit 1 
@@ -21,8 +19,8 @@ g++ $algo.cpp -o $algo -$flag -march=znver5
 echo $algo $flag rounds $rounds dim $dim algo v$version
 for round in $(seq 1 $rounds)
 do
-    ./$algo $dim $version 0 $order >> data/$file
     sleep 1
+    ./$algo $dim $version 0 $order >> data/$file
 done
 
 ./statistics.py data/$file

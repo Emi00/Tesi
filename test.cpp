@@ -4,7 +4,6 @@
 void add_vectors(const std::vector<float>& a, const std::vector<float>& b, std::vector<float>& result) {
     size_t n = a.size();
     
-    // Use OpenMP SIMD pragma for hinting vectorization
     #pragma omp simd
     for (size_t i = 0; i < n; ++i) {
         result[i] = a[i] + b[i];

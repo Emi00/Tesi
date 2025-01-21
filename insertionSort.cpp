@@ -82,25 +82,25 @@ void insertionSortAVX512_v1(double * v, int dim) {
 
 // stesso concetto di v1 ma questa volta utilizzo funzioni SIMD anche se devo spostare meno di 8 posizioni
 void insertionSortAVX512_v2(double * v, int dim) {
-    __m512d current, a,b;
+    __m512d current, vec, vecp1;
     __mmask8 mask;
     for (int i = 1; i < dim; ++i) {
         int j = i-1;
         double key = v[i];
-        while(j >= 8 && v[j-8] > key) {
+        while(j >= 7 && v[j-7] > key) {
             whileSIMD++;
-            __m512d vec = _mm512_loadu_pd(&v[j-7]);
+            vec = _mm512_loadu_pd(&v[j-7]);
             _mm512_storeu_pd(&v[j-6],vec);
             j -= 8;
         }
         if(j >= 7 && v[j-1] > key) {
             ifSIMD++;
             current = _mm512_set1_pd(key);
-            a = _mm512_loadu_pd(&v[j-7]);
-            mask = _mm512_cmplt_pd_mask(current,a);
-            b = _mm512_loadu_pd(&v[j-6]);
-            b = _mm512_mask_blend_pd(mask,b,a);
-            _mm512_storeu_pd(&v[j-6],b);
+            vec = _mm512_loadu_pd(&v[j-7]);
+            mask = _mm512_cmplt_pd_mask(current,vec);
+            vecp1 = _mm512_loadu_pd(&v[j-6]);
+            vec = _mm512_mask_blend_pd(mask,vecp1,vec);
+            _mm512_storeu_pd(&v[j-6],vec);
             j-=8-_tzcnt_u32(mask);
         }
         while (j >= 0 && v[j] > key) {
@@ -223,7 +223,7 @@ int main(int argn, char ** argv) {
                 std::cout<<"insertionSort"<<std::endl;
             {
                 Timer t;
-                insertionSort(v,n);
+                insertionSort(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -241,7 +241,7 @@ int main(int argn, char ** argv) {
                 std::cout<<"insertionSortAVX512_v1"<<std::endl;
             {
                 Timer t;
-                insertionSortAVX512_v1(v,n);
+                insertionSortAVX512_v1(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -259,7 +259,7 @@ int main(int argn, char ** argv) {
                 std::cout<<"insertionSortAVX512_v2"<<std::endl;
             {
                 Timer t;
-                insertionSortAVX512_v2(v,n);
+                insertionSortAVX512_v2(v,n); // nella tesi
                 t.stop();
             }
             break;

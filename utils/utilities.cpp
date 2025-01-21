@@ -1,4 +1,5 @@
 #include "utilities.h"
+#include <algorithm>
 
 
 void generatePseudoSortedArray(double * v, int dim, int limit) {
@@ -88,6 +89,11 @@ bool isSortedAVX512_v1(double * v, int dim) {
 }
 
 
+void sort(double *v, int dim) {
+    std::sort(&v[0],&v[dim]);
+}
+
+/*
 void sort(double * v, int dim) {
     __m512d arr,min_vect;
     long idxs_arr[8] = {0,1,2,3,4,5,6,7};
@@ -120,4 +126,4 @@ void sort(double * v, int dim) {
         }
         std::swap(v[i],v[idx]);
     }
-}
+}*/

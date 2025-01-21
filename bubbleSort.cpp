@@ -246,7 +246,7 @@ void bubbleSortAVX512_v5(double * v, int dim) {
     }
 }
 
-
+// best version
 void bubbleSortAVX512_v6(double * v, int dim) {
     __m512d arr, curr;
     __mmask8 mask;
@@ -256,11 +256,11 @@ void bubbleSortAVX512_v6(double * v, int dim) {
         while(j < i - 8) {
             arr = _mm512_loadu_pd(&v[j]);
             mask = _mm512_cmplt_pd_mask(curr,arr);
-            cicli1++;
             if(!mask) {
                 cicli2++;
                 std::swap(v[j+7],v[j-1]);
             } else {
+                cicli1++;
                 curr = _mm512_set1_pd(v[j+7]);
                 mask = _mm512_cmplt_pd_mask(curr,arr);
                 if(mask) {
@@ -347,6 +347,45 @@ void bubbleSortAVX512_v8(double * v, int dim) {
     }
 }
 
+void bubbleSortAVX512_v9(double * v, int dim) {
+    __m512d arr, curr;
+    __mmask8 mask;
+    for(int i = dim - 1 ; i >= 0 ; i--) {
+        int j = 1;
+        curr =  _mm512_set1_pd(v[0]);
+        while(j < i - 8) {
+            arr = _mm512_loadu_pd(&v[j]);
+            mask = _mm512_cmplt_pd_mask(curr,arr);
+            cicli1++;
+            if(!mask) {
+                cicli2++;
+                std::swap(v[j+7],v[j-1]);
+            } else {
+                curr = _mm512_set1_pd(v[j+7]);
+                mask = _mm512_cmplt_pd_mask(curr,arr);
+                if(mask) {
+                    for(int k = 0 ; k < 7 ; k++) {
+                        curr = _mm512_set1_pd(v[j+k]);
+                        mask = _mm512_cmplt_pd_mask(curr,arr);
+                        cicli3++;
+                        if(!mask) {
+                            std::swap(v[j+7],v[j+k]);
+                            break;
+                        }
+                    }
+                }
+            }
+            j+=8;
+        }
+        while(j <= i ) {
+            if(v[j-1] > v[j]) {
+                std::swap(v[j-1],v[j]);
+            }
+            j++;
+        }
+    }
+}
+
 
 int main(int argn, char ** argv) {
     int n = 8;
@@ -398,7 +437,7 @@ int main(int argn, char ** argv) {
                 std::cout<<"bubbleSort"<<std::endl;
             {
                 Timer t;
-                bubbleSort(v,n);
+                bubbleSort(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -461,7 +500,7 @@ int main(int argn, char ** argv) {
                 std::cout<<"bubbleSortAVX512_v5"<<std::endl;
             {
                 Timer t;
-                bubbleSortAVX512_v5(v,n);
+                bubbleSortAVX512_v5(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -470,7 +509,7 @@ int main(int argn, char ** argv) {
                 std::cout<<"bubbleSortAVX512_v6"<<std::endl;
             {
                 Timer t;
-                bubbleSortAVX512_v6(v,n);
+                bubbleSortAVX512_v6(v,n); // nella tesi
                 t.stop();
             }
             break;
@@ -489,6 +528,15 @@ int main(int argn, char ** argv) {
             {
                 Timer t;
                 bubbleSortAVX512_v8(v,n);
+                t.stop();
+            }
+            break;
+        case 11:
+            if(print >= 1) 
+                std::cout<<"bubbleSortAVX512_v9"<<std::endl;
+            {
+                Timer t;
+                bubbleSortAVX512_v9(v,n);
                 t.stop();
             }
             break;
@@ -511,5 +559,7 @@ int main(int argn, char ** argv) {
             std::cout<<"NOT sorted"<<std::endl;
         }
     }
-    std::cout<<"cicli1: "<<cicli1<<" cicli2: "<<cicli2<<" cicli3: "<<cicli3<<std::endl;
+    if(print >= 3) {
+        std::cout<<"cicli1: "<<cicli1<<" cicli2: "<<cicli2<<" cicli3: "<<cicli3<<std::endl;
+    }
 }
