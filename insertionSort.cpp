@@ -272,6 +272,15 @@ int main(int argn, char ** argv) {
                 t.stop();
             }
             break;
+        case 6:
+            if(print) 
+                std::cout<<"std::sort"<<std::endl;
+            {
+                Timer t;
+                sort(v,n);
+                t.stop();
+            }
+            break;
         default:
             if(print) 
                 std::cout<<"Algoritmo non trovato"<<std::endl;

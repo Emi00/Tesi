@@ -90,7 +90,9 @@ bool isSortedAVX512_v1(double * v, int dim) {
 
 
 void sort(double *v, int dim) {
+    std::cout<<"ordino"<<std::endl;
     std::sort(&v[0],&v[dim]);
+    std::cout<<"ordinato"<<std::endl;
 }
 
 /*

@@ -428,7 +428,7 @@ int main(int argn, char ** argv) {
             tmp[i] = v[i];
         }
     }
-    if(print >= 2) {
+    if(print >= 2 && (print&1) == 0) {
         printv(v,n);
     }
     switch(alg) {
@@ -540,11 +540,20 @@ int main(int argn, char ** argv) {
                 t.stop();
             }
             break;
+        case 12:
+            if(print) 
+                std::cout<<"std::sort"<<std::endl;
+            {
+                Timer t;
+                sort(v,n);
+                t.stop();
+            }
+            break;
         default:
             if(print >= 1) 
                 std::cout<<"Algoritmo non trovato"<<std::endl;
     }
-    if(print >= 2) {
+    if(print >= 2 && (print&1) == 0) {
         printv(v,n);
     }
     if(print >= 1) {

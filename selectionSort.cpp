@@ -1,4 +1,5 @@
 #include "utils/timer.cpp"
+#include "utils/utilities.cpp"
 #include <random>
 #include <iostream>
 #include <climits>
@@ -8,27 +9,6 @@
 using namespace std;
 #pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl,avx512vbmi,avx512ifma,avx512pf,avx512er,avx5124fmaps,avx5124vnniw,avx512bitalg,avx512vp2intersect")
 
-#define cicliRallenta 10000
-
-void printv(double * v, int n);
-void printv(int * v, int n);
-void printv(long * v, int n);
-void debug(__m512d a);
-void debug(__m512i a);
-
-bool isSortedAVX512_v1(double * v, int dim) {
-    bool ans = 0;
-    for(int i = 0 ; i < dim - 7 && !ans; i+=8) {
-        __m512d arr1 = _mm512_loadu_pd(&v[i]);
-        __m512d arr2 = _mm512_loadu_pd(&v[i + 1]);
-        __mmask8 mask =_mm512_cmp_pd_mask(arr1,arr2,_CMP_GT_OS);
-        ans |= (mask > 0);
-    }
-    for(int i = dim - (dim%8) + 1 ; i < dim && !ans; i++) {
-        ans |= v[i] < v[i - 1];
-    }
-    return !ans;
-}
 
 
 // basic selectionSort, for comparasons
@@ -42,39 +22,6 @@ void selectionSort(double * v, int dim) {
         }
         swap(v[i],v[idx]);
     }
-}
-
-
-void debug(__m512i a) {
-    int v[16];
-    _mm512_storeu_epi32(v,a);
-    cout<<"printv int: ";
-    printv(v,16);
-}
-
-void debug64(__m512i a) {
-    long v[8];
-    _mm512_storeu_epi32(v,a);
-    cout<<"printv int: ";
-    printv(v,8);
-}
-
-void debug(__m512d a) {
-    double v[8];
-    _mm512_storeu_pd(v,a);
-    cout<<"printv double: ";
-    printv(v,8);
-}
-
-void debug(__mmask8 m) {
-    for(int i = 0 ; i < 8 ; i++) {
-        if((m>>i)&1) {
-            cout<<"1 ";
-        } else {
-            cout<<"0 ";
-        }
-    }
-    cout<<endl;
 }
 
 
@@ -399,43 +346,125 @@ void selectionSortAVX512_v8(double * v, int dim) {
     }
 }
 
+// Chat-GPT o1
+// A helper function to find the minimum value and its local index in a __m512d
+// returning them as (minValue, localIndexIn0to7) via output parameters.
+// localIndexIn0to7 = which lane among the 8 is the min.
+static inline void horizontal_min8_with_index(__m512d v, double *outMinVal, int *outLaneIndex)
+{
+    // Store the 8 vector elements to a temp array
+    double temp[8];
+    _mm512_storeu_pd(temp, v);
 
-void printv(double * v, int n) {
-    for(int i = 0 ; i< n ; i++) {
-        cout<<v[i]<<" ";
-    }
-    cout<<endl;
-}
-
-void printv(int * v, int n) {
-    for(int i = 0 ; i< n ; i++) {
-        cout<<v[i]<<" ";
-    }
-    cout<<endl;
-}
-
-
-void printv(long * v, int n) {
-    for(int i = 0 ; i< n ; i++) {
-        cout<<v[i]<<" ";
-    }
-    cout<<endl;
-}
-
-
-void generatePseudoSortedArray(double * v, int dim, int limit) {
-    srand(time(NULL));rand();
-    vector<int> toMove(dim,1);
-    for(int i = 0 ; i < dim - limit; i++) {
-        if(toMove[i]) {
-            int idx = rand()%limit;
-            swap(v[i],v[i+idx]);
-            toMove[i] = 0;
-            toMove[i+idx] = 0;
+    // Find the min and local index in scalar
+    double minVal = temp[0];
+    int minIdx = 0;
+    for(int i = 1; i < 8; i++){
+        if(temp[i] < minVal){
+            minVal = temp[i];
+            minIdx = i;
         }
     }
-    for(int i = dim - 1; i > dim - limit ; i--) {
-        swap(v[i],v[i-rand()%limit]);
+    *outMinVal = minVal;
+    *outLaneIndex = minIdx;
+}
+
+// Chat-GPT o1
+// Selection sort using AVX-512 to accelerate the "find minimum in arr[i+1..n-1]" step.
+void selectionSortAVX512_ChatGPT_v2(double *arr, int n)
+{
+    for(int i = 0; i < n - 1; i++){
+        double minVal = arr[i];
+        int minIndex = i;
+
+        // The inner loop: compare arr[j..j+7] in chunks with the current min
+        __m512d vecMinVal = _mm512_set1_pd(minVal); // Broadcast current global min
+        int jStart = i + 1;
+
+        // Process in chunks of 8
+        for(int j = jStart; j <= n - 8; j += 8){
+            // Load next 8 elements
+            __m512d data = _mm512_loadu_pd(&arr[j]);
+            // Compare them to vecMinVal to find local minima
+            // (branchless compare).
+            __m512d maskMin = _mm512_min_pd(data, vecMinVal);
+
+            // Now we want to see if maskMin is actually smaller than
+            // the old vecMinVal in any lane. We'll do a horizontal reduction
+            // to find the local min & lane index.
+            double localMinVal;
+            int localLaneIdx;
+            horizontal_min8_with_index(maskMin, &localMinVal, &localLaneIdx);
+
+            // If the local min is smaller than the global minVal, update
+            // both minVal and minIndex
+            if(localMinVal < minVal){
+                minVal = localMinVal;
+                minIndex = j + localLaneIdx;
+                // Also refresh vecMinVal so future comparisons use the updated min
+                vecMinVal = _mm512_set1_pd(minVal);
+            }
+        }
+
+        // After the 8-wide loop, handle leftover elements if (n - jStart) not divisible by 8
+        int leftoverStart = ((n - 1) / 8) * 8;
+        if(leftoverStart < jStart) leftoverStart = jStart; // Just in case
+        while(leftoverStart < n){
+            if(arr[leftoverStart] < minVal){
+                minVal = arr[leftoverStart];
+                minIndex = leftoverStart;
+            }
+            leftoverStart++;
+        }
+
+        // Swap the found min element with arr[i], if needed
+        if(minIndex != i){
+            double tmp = arr[i];
+            arr[i] = arr[minIndex];
+            arr[minIndex] = tmp;
+        }
+    }
+}
+
+
+void selectionSortAVX512_DeepSeekr1_14b(double *arr, int n) {
+    for (int i = 0; i < n; ++i) {
+        // Find the minimum in the subarray from i to n-1
+        int min_index = i;
+        double min_val = arr[i];
+        
+        // Process the array in chunks of 8 elements
+        for (int j = i + 8; j <= n; j += 8) {
+            __m512d vec = _mm512_loadu_pd(arr + j - 8);
+            
+            // Compare each element in the vector to find the minimum
+            int mask;
+            __m512d miv_vec = _mm512_set1_pd(min_val);
+            for (int k = 0; k < 8; ++k) {
+               /* if (k == 0 || _mm512_cmp_pd_mask(
+                    _mm512_shuffle_pd(vec, vec, (k << 4)), 
+                    miv_vec, _CMP_LT_OS)) {
+                    // Update the minimum value and index
+                    //miv_vec = _mm512_shuffle_pd(vec, vec, (k << 4));
+                    min_index = j - 8 + k;
+                }*/
+            }
+        }
+        
+        // Swap the found minimum with the element at position i using vector operations
+        if (min_index != i) {
+            __m512d min_vec = _mm512_maskz_expandloadu_pd(0x01 << i,arr);
+            __m512d current_vec = _mm512_loadu_pd(&arr[i]);
+            
+            // Replace the ith element with the minimum value
+            _mm512_mask_compressstoreu_pd(arr, 0x01 << i, min_vec);
+            
+            // Shift all elements from min_index to i-1 one position to the right
+            if (min_index > i) {
+                _mm512_loadu_pd(&arr[i + 1]);
+                //_mm512_storeu_pd(&arr[i],current_vec);
+            }
+        }
     }
 }
 
@@ -559,6 +588,33 @@ int main(int argn, char ** argv) {
                 t.stop();
             }
             break;
+        case 9:
+            if(print) 
+                cout<<"selectionSortAVX512_ChatGPT_v2"<<endl;
+            {
+                Timer t;
+                selectionSortAVX512_ChatGPT_v2(v,n); // nella tesi
+                t.stop();
+            }
+            break;
+        case 10:
+            if(print) 
+                cout<<"selectionSortAVX512_DeepSeekr1_14b"<<endl;
+            {
+                Timer t;
+                selectionSortAVX512_DeepSeekr1_14b(v,n);
+                t.stop();
+            }
+            break;
+        case 11:
+            if(print) 
+                std::cout<<"std::sort"<<std::endl;
+            {
+                Timer t;
+                sort(v,n);
+                t.stop();
+            }
+            break;
         default:
             if(print) 
                 cout<<"Algoritmo non trovato"<<endl;
@@ -573,9 +629,9 @@ int main(int argn, char ** argv) {
             ok &= (v[i] == tmp[i]);
         }
         if(ok) {
-            cout<<"sorted"<<endl;
+            cout<<n<<" "<<n%8<<" sorted"<<endl;
         } else {
-            cout<<"NOT sorted"<<endl;
+            cout<<n<<" "<<n%8<<" NOT sorted"<<endl;
         }
     }
 }

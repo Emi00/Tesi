@@ -1,0 +1,862 @@
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabelle spiegazione algoritmi</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /*min-height: 100vh;*/
+            margin: 0;
+        }
+        .tabella {
+            display: flex;
+            align-items: center;
+            margin: 1rem;
+        }
+        .label {
+            margin-right: 10px;
+            /*font-weight: bold;*/
+            width: 5rem;
+        }
+        .variable {
+            margin: auto;
+
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 8px;
+            text-align: center;
+        }
+        .algo {
+            font-weight: bolder;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .arancio {
+            background-color: orange;
+        }
+        .verde {
+            background-color: greenyellow;
+        }
+        .giallo {
+            background-color: yellow;
+        }
+        .spiegazione {
+            margin: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="spiegazione"><!--InsertionSort v1 -->
+        <div class="algo">InsertionSort v1</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td class="giallo">1</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vec:</div>
+            <table>
+                <tr>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td class="arancio">1</td>
+                    <td class="verde">2</td>
+                    <td class="verde">3</td>
+                    <td class="verde">4</td>
+                    <td class="verde">5</td>
+                    <td class="verde">6</td>
+                    <td class="verde">7</td>
+                    <td class="verde">8</td>
+                    <td class="verde">9</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="spiegazione"><!--InsertionSort v2 -->
+        <div class="algo">InsertionSort v2</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td class="giallo">3</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">current:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vecp1:</div>
+            <table>
+                <tr>
+                    <td>2</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>3</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vec:</div>
+            <table>
+                <tr>
+                    <td>2</td>
+                    <td>4</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td class="verde">2</td>
+                    <td class="arancio">3</td>
+                    <td class="verde">4</td>
+                    <td class="verde">5</td>
+                    <td class="verde">6</td>
+                    <td class="verde">7</td>
+                    <td class="verde">8</td>
+                    <td class="verde">9</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="spiegazione"><!--SelectionSort v1 -->
+        <div class="algo">SelectionSort v1</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vec:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">LastMin: 3</div>
+            <div class="variable">Idx: 0</div>
+            <div class="variable">minimum: 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td class="arancio">1</td>
+                    <td class="arancio">2</td>
+                    <td>3</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <div class="spiegazione"><!--SelectionSort v2 -->
+        <div class="algo">SelectionSort v2</div>
+        <div class="tabella">
+            <div class="label">idxs_vect:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>7</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vec:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">j: 1</div>
+            <div class="variable">minimum: 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">min_vect:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">c:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">idx: 1 + 0 = 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td class="arancio">1</td>
+                    <td class="arancio">3</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="spiegazione"><!--SelectionSort v2.1 -->
+        <div class="algo">SelectionSort v2.1</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vec:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">j: 1</div>
+            <div class="variable">minimum: 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">min_vect:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">idx: 1 + 0 = 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td class="arancio">1</td>
+                    <td class="arancio">3</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="spiegazione"><!--SelectionSort v3 -->
+        <div class="algo">SelectionSort v3</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">min_vec:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">vec:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">minimum: 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">min_vec:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">idx: 1 + 0 = 1</div>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td class="arancio">1</td>
+                    <td class="arancio">3</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="spiegazione"><!--BubbleSort v1 -->
+        <div class="algo">BubbleSort v1</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>9</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>5</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">arr:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>9</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>5</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">curr:</div>
+            <table>
+                <tr>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>5</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">maximum: 9</div>
+        </div>
+        <div class="tabella">
+            <div class="label">curr:</div>
+            <table>
+                <tr>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">idx: 7</div>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td class="arancio">5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td class="arancio">9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="spiegazione"><!--BubbleSort v2 -->
+        <div class="algo">BubbleSort v2</div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>9</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>5</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">curr:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>3</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">arr:</div>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>9</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td>5</td>
+                    <td>2</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">Caso mask == 0 termina</div>
+        </div>
+        <div class="tabella">
+            <div class="label">curr:</div>
+            <table>
+                <tr>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                    <td>2</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">Caso mask == 0 termina</div>
+        </div>
+        <div class="tabella">
+            <div class="variable">maximum: 9</div>
+        </div>
+        <div class="tabella">
+            <div class="label">curr:</div>
+            <table>
+                <tr>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>9</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="label">mask:</div>
+            <table>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </table>
+        </div>
+        <div class="tabella">
+            <div class="variable">idx: 1 + 3 = 4</div>
+        </div>
+        <div class="tabella">
+            <div class="label">array:</div>
+            <table>
+                <tr>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td class="arancio">5</td>
+                    <td>6</td>
+                    <td>8</td>
+                    <td class="arancio">9</td>
+                    <td>2</td>
+                    <td>10</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
